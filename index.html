@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Aviator Predictor — 10s</title>
+<style>
+  :root{
+    --bg:#080405;
+    --panel:#0b0000;
+    --accent:#ff3030;
+    --glow: rgba(255,48,48,0.25);
+    --muted:#bfb1b1;
+  }
+  *{box-sizing:border-box;font-family:Inter,system-ui,Arial,sans-serif}
+
+  body{
+    margin:0; 
+    min-height:100vh; 
+    display:flex; 
+    align-items:center; 
+    justify-content:center;
+    background: linear-gradient(180deg,#030203 0%, #090405 100%);
+    color:#fff;
+    padding:20px;
+    animation: fadeIn 1.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from {opacity:0;}
+    to {opacity:1;}
+  }
+
+  .frame{
+    width:360px; 
+    max-width:94vw; 
+    border-radius:18px;
+    overflow:hidden;
+    padding:18px;
+    background:linear-gradient(180deg,#0d0000 0%, #100000 100%);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.7), 
+                0 0 40px rgba(255,0,0,0.02) inset;
+    animation: slideUp 0.8s ease;
+  }
+
+  @keyframes slideUp {
+    from {transform:translateY(40px); opacity:0;}
+    to {transform:translateY(0); opacity:1;}
+  }
+
+  .logo {
+    display:flex; 
+    flex-direction:column;
+    align-items:center; 
+    justify-content:center; 
+    text-align:center;
+    margin-bottom:10px;
+  }
+
+  .logo img {
+    width:100px; /* ⬅️ Increased from 50px to 100px */
+    height:auto;
+    filter: drop-shadow(0 0 16px rgba(255,48,48,0.5));
+    animation: floatPlane 3s infinite ease-in-out alternate;
+    margin-bottom:8px;
+  }
+
+  @keyframes floatPlane {
+    from {transform: translateY(-4px) rotate(-3deg);}
+    to {transform: translateY(4px) rotate(3deg);}
+  }
+
+  .logo h1 {
+    color:#ff3030;
+    font-size:22px;
+    margin:0;
+    letter-spacing:0.5px;
+  }
+
+  .status{
+    margin-top:14px;
+    background: rgba(255,255,255,0.03);
+    border-radius:10px;
+    padding:10px 12px;
+    color:#ffb4b4;
+    font-size:14px;
+    text-align:center;
+    animation: fadeIn 1.4s ease;
+  }
+
+  .top-progress{
+    height:8px;
+    background:rgba(255,255,255,0.02);
+    border-radius:6px;
+    margin-top:12px;
+    overflow:hidden;
+  }
+  .top-progress .bar{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, #ff4d4d, #ff1a1a);
+    box-shadow:0 0 18px var(--glow) inset;
+    transition: width 0.3s linear;
+  }
+
+  .countdown{ text-align:center; margin-top:14px; font-size:13px; color:var(--muted); }
+
+  @keyframes pulseGlow {
+    0% { box-shadow:0 0 32px rgba(255,48,48,0.18); }
+    50% { box-shadow:0 0 80px rgba(255,48,48,0.35); }
+    100% { box-shadow:0 0 32px rgba(255,48,48,0.18); }
+  }
+
+  .circle-wrap{display:flex; align-items:center; justify-content:center; margin:18px 0 8px; position:relative}
+
+  .glow{
+    width:220px; height:220px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(circle at center, rgba(255,48,48,0.05) 0%, rgba(0,0,0,0.6) 60%);
+    animation: pulseGlow 3s infinite ease-in-out;
+    position:relative;
+  }
+
+  .ring{
+    position:absolute;
+    width:100%; height:100%;
+    border-radius:50%;
+    background: conic-gradient(rgba(255,48,48,0.22) 0deg,
+                               rgba(255,48,48,0.06) 120deg,
+                               transparent 360deg);
+    filter: blur(8px);
+    pointer-events:none;
+    animation: rotateRing 6s linear infinite;
+  }
+
+  @keyframes rotateRing {
+    from {transform: rotate(0deg);}
+    to {transform: rotate(360deg);}
+  }
+
+  .readout{text-align:center; z-index:2; position:relative;}
+  .mult{font-size:40px; font-weight:700; transition:0.3s;}
+  .conf{font-size:13px; margin-top:8px; color:var(--muted); opacity:0; transition:0.4s;}
+
+  .row{display:flex; gap:12px; margin-top:14px;}
+
+  .btn{
+    flex:1;
+    padding:14px;
+    border-radius:10px;
+    text-align:center;
+    font-weight:700;
+    cursor:pointer;
+    user-select:none;
+    border:0;
+    transition:0.2s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,0.45);
+  }
+
+  .btn:active{
+    transform:scale(0.94);
+    filter:brightness(1.3);
+  }
+
+  .btn.signal{background:#3a3939; color:#d3d3d3}
+  .btn.return{background:var(--accent); color:#fff}
+
+  .footer-note{font-size:11px; color:var(--muted); text-align:center; margin-top:12px}
+</style>
+</head>
+<body>
+
+<div class="frame">
+  <div class="logo">
+    <img src="https://i.ibb.co/6cDyMVbn/1000130691-removebg-preview.png" alt="Aviator Logo">
+    <h1>Aviator Predictor</h1>
+  </div>
+
+  <div class="status" id="statusText">Prediction updated successfully!</div>
+
+  <div class="top-progress">
+    <div class="bar" id="topBar"></div>
+  </div>
+
+  <div class="countdown" id="countdownText">10 Seconds</div>
+
+  <div class="circle-wrap">
+    <div class="glow">
+      <div class="ring" id="ring"></div>
+
+      <div class="readout">
+        <div class="mult" id="multiplier">Aviator</div>
+        <div class="conf" id="confidence">Confidence: --%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="btn signal" id="getSignalBtn">GET SIGNAL</button>
+    <button class="btn return" id="returnBtn">RETURN</button>
+  </div>
+
+  <div class="footer-note">Local simulated prediction — for testing & UI only</div>
+</div>
+
+<script>
+const getSignalBtn = document.getElementById('getSignalBtn');
+const returnBtn = document.getElementById('returnBtn');
+const multiplierEl = document.getElementById('multiplier');
+const confidenceEl = document.getElementById('confidence');
+const countdownEl = document.getElementById('countdownText');
+const topBar = document.getElementById('topBar');
+const statusText = document.getElementById('statusText');
+
+let countdown = null;
+let running = false;
+
+function generatePrediction() {
+  const u = Math.random();
+  let multiplier;
+
+  if (u < 0.70) multiplier = 1 + Math.random() * 3.5;
+  else if (u < 0.95) multiplier = 3 + Math.random() * 12;
+  else multiplier = 10 + Math.random() * 90;
+
+  multiplier = Math.round(multiplier * 100) / 100;
+
+  let conf = 100 - Math.log10(Math.max(1, multiplier)) * 18 - (Math.random()*12);
+  conf = Math.round(Math.max(10, Math.min(98, conf)));
+
+  return { multiplier, confidence: conf };
+}
+
+function startCountdown(time=10){
+  if (running) return;
+
+  running = true;
+  topBar.style.width = "0%";
+  confidenceEl.style.opacity = 0;
+
+  let left = time;
+  countdownEl.textContent = `${left} Seconds`;
+
+  statusText.textContent = "Waiting for signal...";
+  multiplierEl.textContent = "Aviator";
+
+  countdown = setInterval(() => {
+    left--;
+    countdownEl.textContent = `${left} Seconds`;
+    topBar.style.width = `${((time-left)/time)*100}%`;
+
+    if(left<=0){
+      clearInterval(countdown);
+      showPrediction();
+      running = false;
+    }
+  },1000);
+}
+
+function showPrediction(){
+  const p = generatePrediction();
+  multiplierEl.textContent = p.multiplier.toFixed(2)+"x";
+  confidenceEl.textContent = "Confidence: "+p.confidence+"%";
+  statusText.textContent = "Prediction ready";
+  confidenceEl.style.opacity = "1";
+
+  multiplierEl.animate([
+    {transform:"scale(0.8)", opacity:0},
+    {transform:"scale(1.15)", opacity:1},
+    {transform:"scale(1)", opacity:1}
+  ], {duration:500, easing:"ease-out"});
+}
+
+getSignalBtn.onclick = ()=> startCountdown(10);
+
+returnBtn.onclick = ()=>{
+  if(countdown){ clearInterval(countdown); }
+  running=false;
+  multiplierEl.textContent="Aviator";
+  confidenceEl.textContent="Confidence: --%";
+  confidenceEl.style.opacity=0;
+  countdownEl.textContent="10 Seconds";
+  topBar.style.width="0%";
+  statusText.textContent="Ready";
+}
+</script>
+
+</body>
+</html>
